@@ -1,0 +1,153 @@
+using System;
+
+namespace Minesweeper
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine("Добро пожаловать в игру Сапёр!");
+            Console.WriteLine("Введите размер поля: ");
+            int size = int.Parse(Console.ReadLine());
+
+            Console.WriteLine("Введите количество мин: ");
+            int mineCount = int.Parse(Console.ReadLine());
+
+            char[,] board = InitializeBoard(size);
+            PlaceMines(board, mineCount);
+
+            bool gameOver = false;
+            int totalCells = size * size;
+            int revealedCells = 0;
+
+            while (!gameOver)
+            {
+                DrawBoard(board);
+
+                Console.Write("Введите координаты клетки (строка столбец): ");
+                string[] input = Console.ReadLine().Split(' ');
+                int row = int.Parse(input[0]);
+                int col = int.Parse(input[1]);
+
+                if (row >= 0 && row < size && col >= 0 && col < size && board[row, col] != '*')
+                {
+                    if (board[row, col] == '-')
+                    {
+                        revealedCells++;
+                        board[row, col] = CountAdjacentMines(board, row, col);
+
+                        if (revealedCells == totalCells - mineCount)
+                        {
+                            gameOver = true;
+                            Console.WriteLine("Вы победили!");
+                        }
+                    }
+                }
+                else
+                {
+                    gameOver = true;
+                    Console.WriteLine("Вы проиграли!");
+                    RevealBoard(board);
+                }
+            }
+
+            Console.WriteLine("Игра окончена. Нажмите любую клавишу для выхода.");
+            Console.ReadKey();
+        }
+
+        static char[,] InitializeBoard(int size)
+        {
+            char[,] board = new char[size, size];
+
+            for (int row = 0; row < size; row++)
+            {
+                for (int col = 0; col < size; col++)
+                {
+                    board[row, col] = '-';
+                }
+            }
+
+            return board;
+        }
+
+        static void PlaceMines(char[,] board, int mineCount)
+        {
+            int size = board.GetLength(0);
+            Random random = new Random();
+
+            while (mineCount > 0)
+            {
+                int row = random.Next(0, size);
+                int col = random.Next(0, size);
+
+                if (board[row, col] != '*')
+                {
+                    board[row, col] = '*';
+                    mineCount--;
+                }
+            }
+        }
+
+        static void DrawBoard(char[,] board)
+        {
+            int size = board.GetLength(0);
+
+            Console.WriteLine();
+            Console.Write("  ");
+            for (int col = 0; col < size; col++)
+            {
+                Console.Write(col + " ");
+            }
+            Console.WriteLine();
+
+            for (int row = 0; row < size; row++)
+            {
+                Console.Write(row + " ");
+                for (int col = 0; col < size; col++)
+                {
+                    Console.Write(board[row, col] + " ");
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine();
+        }
+
+        static char CountAdjacentMines(char[,] board, int row, int col)
+        {
+            int size = board.GetLength(0);
+            int count = 0;
+
+            for (int i = -1; i <= 1; i++)
+            {
+                for (int j = -1; j <= 1; j++)
+                {
+                    int newRow = row + i;
+                    int newCol = col + j;
+
+                    if (newRow >= 0 && newRow < size && newCol >= 0 && newCol < size && board[newRow, newCol] == '*')
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            return count > 0 ? count.ToString()[0] : ' ';
+        }
+
+        static void RevealBoard(char[,] board)
+        {
+            int size = board.GetLength(0);
+
+            for (int row = 0; row < size; row++)
+            {
+                for (int col = 0; col < size; col++)
+                {
+                    if (board[row, col] != '*')
+                    {
+                        board[row, col] = CountAdjacentMines(board, row, col);
+                    }
+                }
+            }
+        }
+    }
+}
